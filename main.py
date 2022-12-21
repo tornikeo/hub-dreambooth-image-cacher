@@ -80,7 +80,7 @@ if __name__ == "__main__":
         model.save_pretrained(
             args.output_dir,
         )   
-        local_repo.push_to_hub(commit_message="Add fp16 files", blocking=False, clean_ok=False, auto_lfs_prune=True)
+        local_repo.push_to_hub(commit_message="Add fp16 files", blocking=True, clean_ok=False, auto_lfs_prune=True)
 
         # Clean up afterwards
         
