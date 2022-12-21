@@ -21,10 +21,9 @@ def get_full_repo_name(model_id: str, organization: Optional[str] = None, token:
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
     assert 'HF_AUTH_TOKEN' in os.environ
-    args.hub_token = os.getenv('HF_AUTH_TOKEN')
+    token = os.environ['HF_AUTH_TOKEN']
+    huggingface_hub.login(token)
     args.output_dir = 'models'
-    huggingface_hub.login(args.hub_token)
-
     model_names = [
         "nitrosocke/Ghibli-Diffusion",
         "nitrosocke/redshift-diffusion",

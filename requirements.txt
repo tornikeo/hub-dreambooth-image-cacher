@@ -1,3 +1,4 @@
-diffusers
+diffusers>=0.11
 tqdm
 python-dotenv
+huggingface-hub>=0.11

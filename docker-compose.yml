@@ -6,3 +6,5 @@ services:
       args:
         - HF_AUTH_TOKEN
       context: .
+    volumes:
+      - .:/workdir
