@@ -1,0 +1,8 @@
+services:
+  app:
+    env_file: 
+      - .env
+    build: 
+      args:
+        - HF_AUTH_TOKEN
+      context: .
