@@ -58,7 +58,10 @@ if __name__ == "__main__":
             shutil.rmtree(Path(args.output_dir))
         api = HfApi()
         new_model_id = f'TornikeO/{orig_model_name}-fp16'
-        api.delete_repo(new_model_id)
+        try:
+            api.delete_repo(new_model_id)
+        except Exception as e:
+            print(e)
 
         remote_repo = api.create_repo(
             repo_id=new_model_id,
@@ -76,9 +79,10 @@ if __name__ == "__main__":
         model.save_pretrained(
             args.output_dir,
         )   
-        local_repo.push_to_hub(commit_message="Add fp16 files", blocking=True, clean_ok=False, auto_lfs_prune=True)
+        local_repo.push_to_hub(commit_message="Add fp16 files", blocking=False, clean_ok=False, auto_lfs_prune=True)
 
         # Clean up afterwards
-        shutil.rmtree(args.output_dir)
+        
+        shutil.rmtree(args.output_dir, ignore_errors=True)
 
-    print("Hello")
+    print("Done!")
