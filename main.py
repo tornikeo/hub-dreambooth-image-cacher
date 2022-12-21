@@ -8,6 +8,7 @@ from typing import Optional, List
 import argparse
 import os
 from tqdm import tqdm
+import shutil
 
 def get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):
     if token is None:
