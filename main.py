@@ -77,19 +77,17 @@ def main():
         args.gradient_accumulation_steps = 1
         args.with_prior_preservation = True
         args.num_class_images = 200
-
-        args.sample_batch_size = 30
-
         args.class_prompt = 'photo of person'
         args.pretrained_model_name_or_path = model_id
         args.revision = 'fp16'
         args.class_data_dir = results_dir / slugify(args.pretrained_model_name_or_path) / slugify(args.class_prompt)
         
-        args.sample_batch_size = 70
+        args.sample_batch_size = 10
         try:
             generate_images.main(args)
         except Exception as e:
-            args.sample_batch_size = 30
+            torch.cuda.empty_cache()
+            args.sample_batch_size = 6
             generate_images.main(args)
         pickle.dump(args, (args.class_data_dir.parent / 'args.pickle').open('wb'))
         shutil.copytree(results_dir, repo_dir, dirs_exist_ok=True)
