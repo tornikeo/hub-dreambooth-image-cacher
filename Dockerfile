@@ -1,5 +1,5 @@
 FROM pytorch/pytorch:1.13.0-cuda11.6-cudnn8-runtime
-RUN apt install git git-lfs wget libglib2.0-0 libsm6 libgl1 libxrender1 libxext6 -y
+RUN apt update && apt install git git-lfs wget libglib2.0-0 libsm6 libgl1 libxrender1 libxext6 -y
 RUN git lfs install
 RUN conda install xformers -c xformers/label/dev -y
 WORKDIR /workdir
