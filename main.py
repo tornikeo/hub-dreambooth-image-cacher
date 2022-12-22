@@ -26,10 +26,10 @@ if __name__ == "__main__":
     huggingface_hub.login(token)
     args.output_dir = 'models'
     model_names = [
-        "nitrosocke/Ghibli-Diffusion",
-        "nitrosocke/redshift-diffusion",
-        "nitrosocke/Nitro-Diffusion",
-        "nitrosocke/Future-Diffusion",
+        # "nitrosocke/Ghibli-Diffusion",
+        # "nitrosocke/redshift-diffusion",
+        # "nitrosocke/Nitro-Diffusion",
+        # "nitrosocke/Future-Diffusion",
         "nitrosocke/Arcane-Diffusion",
         "prompthero/openjourney",
         "stabilityai/stable-diffusion-2-1",
