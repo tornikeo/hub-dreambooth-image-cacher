@@ -11,3 +11,10 @@ services:
     volumes:
       - .:/workdir
       - /home/tornikeo/.cache/huggingface:/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
