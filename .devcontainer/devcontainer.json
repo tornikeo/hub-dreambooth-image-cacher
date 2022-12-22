@@ -23,7 +23,7 @@
 				"ms-python.python"
 			]
 		}
-	}
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -39,6 +39,7 @@
 
 	// Uncomment the next line to run commands after the container is created.
 	// "postCreateCommand": "cat /etc/os-release",
+	"postCreateCommand": "git config --global --add safe.directory '*' && git config --global user.email tornikeonoprishvili@gmail.com && git config --global user.name tornikeo"
 
 	// Configure tool-specific properties.
 	// "customizations": {},

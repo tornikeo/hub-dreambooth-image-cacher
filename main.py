@@ -13,6 +13,8 @@ import generate_images
 import subprocess
 import accelerate
 from accelerate.commands import launch
+from slugify import slugify
+import pickle
 
 def get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):
     if token is None:
@@ -45,6 +47,28 @@ def main():
         "dallinmackay/Van-Gogh-diffusion",
         "dreamlike-art/dreamlike-diffusion-1.0"
     ]
+
+    api = HfApi()
+
+    remote_repo = api.create_repo(
+        repo_id='TornikeO/dreambooth-class-img-cache',
+        exist_ok=True
+    )
+
+    repo_directory = Path('repo')
+
+    repo_directory.mkdir(exist_ok=True)
+    results_dir = Path('results')
+    repo_dir = Path('repo')
+    if repo_dir.exists():
+        shutil.rmtree(repo_dir)
+    repo_dir.mkdir(exist_ok=True)
+    local_repo = Repository(
+        repo_dir, 
+        clone_from=remote_repo,
+        skip_lfs_files=False,
+    )
+
     for model_id in tqdm(model_names):
         orig_author, orig_model_name = model_id.split('/')
         model_id = f'TornikeO/{orig_model_name}-fp16'
@@ -53,52 +77,24 @@ def main():
         args.gradient_accumulation_steps = 1
         args.with_prior_preservation = True
         args.num_class_images = 200
-        args.sample_batch_size = 2
+
+        args.sample_batch_size = 30
+
         args.class_prompt = 'photo of person'
         args.pretrained_model_name_or_path = model_id
         args.revision = 'fp16'
-
-        args.class_data_dir = 'output_images'
-        from slugify import slugify
-        args.output_dir = Path('results') / slugify(args.pretrained_model_name_or_path) / slugify(args.class_prompt)
-        generate_images.main(args)
-
-        # launch.launch_command(generate_images.main(args))
-        # launch.simple_launcher(args)
-
-
-        # if Path(output_dir).exists():
-        #     import shutil
-        #     shutil.rmtree(Path(output_dir))
+        args.class_data_dir = results_dir / slugify(args.pretrained_model_name_or_path) / slugify(args.class_prompt)
         
-        # api = HfApi()
-        # try:
-        #     api.delete_repo(new_model_id)
-        # except Exception as e:
-        #     print(e)
-
-        # remote_repo = api.create_repo(
-        #     repo_id=new_model_id,
-        #     exist_ok=True
-        # )
-
-        # local_repo = Repository(
-        #     output_dir, 
-        #     revision='fp16',
-        #     clone_from=remote_repo,
-        #     skip_lfs_files=True,
-        # )
-
-        # Path(output_dir).mkdir(exist_ok=True)
-        # model.save_pretrained(
-        #     output_dir,
-        # )   
-        # local_repo.push_to_hub(commit_message="Add fp16 files", blocking=True,clean_ok=False, auto_lfs_prune=True)
-
-        # # Clean up afterwards
-        
-        # shutil.rmtree(output_dir, ignore_errors=True)
-
+        args.sample_batch_size = 70
+        try:
+            generate_images.main(args)
+        except Exception as e:
+            args.sample_batch_size = 30
+            generate_images.main(args)
+            
+            pickle.dump(args, (args.class_data_dir.parent / 'args.pickle').open('wb'))
+            shutil.copytree(results_dir, repo_dir, dirs_exist_ok=True)
+            local_repo.push_to_hub(commit_message="Add cache files", blocking=False, clean_ok=True, auto_lfs_prune=True)
     print("Done!")
 
 if __name__ == "__main__":
