@@ -4,3 +4,4 @@ python-dotenv
 huggingface-hub>=0.11
 transformers
 accelerate
+scipy
