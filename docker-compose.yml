@@ -1,3 +1,4 @@
+
 services:
   app:
     env_file: 
@@ -5,6 +6,8 @@ services:
     build: 
       args:
         - HF_AUTH_TOKEN
+        - HF_HOME=/huggingface
       context: .
     volumes:
       - .:/workdir
+      - /home/tornikeo/.cache/huggingface:/huggingface

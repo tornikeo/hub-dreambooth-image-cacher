@@ -19,12 +19,13 @@ def get_full_repo_name(model_id: str, organization: Optional[str] = None, token:
     else:
         return f"{organization}/{model_id}"
 
-if __name__ == "__main__":
-    args = argparse.ArgumentParser()
+def main():
     assert 'HF_AUTH_TOKEN' in os.environ
     token = os.environ['HF_AUTH_TOKEN']
     huggingface_hub.login(token)
-    args.output_dir = 'models'
+
+    output_dir = 'images'
+
     model_names = [
         "nitrosocke/Ghibli-Diffusion",
         "nitrosocke/redshift-diffusion",
@@ -42,6 +43,8 @@ if __name__ == "__main__":
     ]
     for model_id in tqdm(model_names):
         orig_author, orig_model_name = model_id.split('/')
+        model_id = f'TornikeO/{orig_model_name}-fp16'
+
         model = DiffusionPipeline.from_pretrained(
             model_id,
             revision='main',
@@ -49,16 +52,12 @@ if __name__ == "__main__":
             safety_checker=None,
         )
 
-            
-        # if args.hub_model_id is None:
-        #     repo_name = get_full_repo_name(Path(args.output_dir).name, token=args.hub_token)
-        # else:
-        #     repo_name = args.hub_model_id
-        if Path(args.output_dir).exists():
+
+        if Path(output_dir).exists():
             import shutil
-            shutil.rmtree(Path(args.output_dir))
+            shutil.rmtree(Path(output_dir))
+        
         api = HfApi()
-        new_model_id = f'TornikeO/{orig_model_name}-fp16'
         try:
             api.delete_repo(new_model_id)
         except Exception as e:
@@ -70,20 +69,23 @@ if __name__ == "__main__":
         )
 
         local_repo = Repository(
-            args.output_dir, 
+            output_dir, 
             revision='fp16',
             clone_from=remote_repo,
             skip_lfs_files=True,
         )
 
-        Path(args.output_dir).mkdir(exist_ok=True)
+        Path(output_dir).mkdir(exist_ok=True)
         model.save_pretrained(
-            args.output_dir,
+            output_dir,
         )   
         local_repo.push_to_hub(commit_message="Add fp16 files", blocking=True,clean_ok=False, auto_lfs_prune=True)
 
         # Clean up afterwards
         
-        shutil.rmtree(args.output_dir, ignore_errors=True)
+        shutil.rmtree(output_dir, ignore_errors=True)
 
     print("Done!")
+
+if __name__ == "__main__":
+    main()

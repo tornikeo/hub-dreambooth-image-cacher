@@ -5,3 +5,7 @@ huggingface-hub>=0.11
 transformers
 accelerate
 scipy
+python-slugify
+randomname
+datasets
+notebook
