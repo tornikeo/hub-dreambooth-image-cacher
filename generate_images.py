@@ -515,8 +515,7 @@ def main(args):
     #         logger.info(f"Pushing the model to the hub (repo-name {repo_name}) ...")
     #         repo.push_to_hub(commit_message="End of training", blocking=True, clean_ok=False, auto_lfs_prune=True)
 
-    accelerator.end_training()
-    torch.cuda.empty_cache()
+    # accelerator.end_training()
 
 if __name__ == "__main__":
     args = parse_args()
