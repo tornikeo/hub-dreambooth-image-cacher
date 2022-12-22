@@ -5,7 +5,9 @@ RUN conda install xformers -c xformers/label/dev -y
 WORKDIR /workdir
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
+
 COPY main.py .
+COPY generate_images.py .
 
 ARG HF_AUTH_TOKEN
 ENV HF_AUTH_TOKEN=${HF_AUTH_TOKEN}
