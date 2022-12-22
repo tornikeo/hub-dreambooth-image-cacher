@@ -15,7 +15,7 @@ from torch.utils.data import Dataset
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import set_seed
-from diffusers import AutoencoderKL, DDPMScheduler, DiffusionPipeline, UNet2DConditionModel
+from diffusers import AutoencoderKL, DDPMScheduler, DiffusionPipeline, UNet2DConditionModel, StableDiffusionPipeline
 from diffusers.optimization import get_scheduler
 from diffusers.utils import check_min_version
 from diffusers.utils.import_utils import is_xformers_available
@@ -27,6 +27,7 @@ from transformers import AutoTokenizer, PretrainedConfig
 from accelerate import logging
 from requests import HTTPError
 import numpy as np
+
 
 # Will error if the minimal version of diffusers is not installed. Remove at your own risks.
 check_min_version("0.10.0.dev0")
@@ -438,7 +439,7 @@ def main(args):
             torch_dtype = torch.float16 if accelerator.device.type == "cuda" else torch.float32
             for attempts in range(3):
                 try:
-                    pipeline = DiffusionPipeline.from_pretrained(
+                    pipeline = StableDiffusionPipeline.from_pretrained(
                         args.pretrained_model_name_or_path,
                         torch_dtype=torch_dtype,
                         safety_checker=None,
@@ -449,8 +450,8 @@ def main(args):
                     print("Some weird huggingface loading error occured. Waiting and retrying once more. Error: ", e)
                     time.sleep(1)
                     if attempts == 2: raise e
-            
-                
+            if is_xformers_available():
+                pipeline.enable_xformers_memory_efficient_attention()
             # pipeline.set_progress_bar_config(disable=True)
 
             num_new_images = args.num_class_images - cur_class_images
@@ -515,3 +516,8 @@ def main(args):
     #         repo.push_to_hub(commit_message="End of training", blocking=True, clean_ok=False, auto_lfs_prune=True)
 
     accelerator.end_training()
+    torch.cuda.empty_cache()
+
+if __name__ == "__main__":
+    args = parse_args()
+    main(args)

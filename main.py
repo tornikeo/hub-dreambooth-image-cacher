@@ -10,6 +10,9 @@ import os
 from tqdm import tqdm
 import shutil
 import generate_images
+import subprocess
+import accelerate
+from accelerate.commands import launch
 
 def get_full_repo_name(model_id: str, organization: Optional[str] = None, token: Optional[str] = None):
     if token is None:
@@ -45,26 +48,23 @@ def main():
     for model_id in tqdm(model_names):
         orig_author, orig_model_name = model_id.split('/')
         model_id = f'TornikeO/{orig_model_name}-fp16'
-
-        model = DiffusionPipeline.from_pretrained(
-            model_id,
-            revision='fp16',
-            torch_dtype=torch.float16,
-            safety_checker=None,
-        )
-
-        print(model)
         args = argparse.Namespace()
         args.mixed_precision = 'fp16'
         args.gradient_accumulation_steps = 1
         args.with_prior_preservation = True
-        args.class_data_dir = 'output_images'
         args.num_class_images = 200
-        args.sample_batch_size = 4
+        args.sample_batch_size = 2
         args.class_prompt = 'photo of person'
         args.pretrained_model_name_or_path = model_id
         args.revision = 'fp16'
+
+        args.class_data_dir = 'output_images'
+        from slugify import slugify
+        args.output_dir = Path('results') / slugify(args.pretrained_model_name_or_path) / slugify(args.class_prompt)
         generate_images.main(args)
+
+        # launch.launch_command(generate_images.main(args))
+        # launch.simple_launcher(args)
 
 
         # if Path(output_dir).exists():
