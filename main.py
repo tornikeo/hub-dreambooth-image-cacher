@@ -94,6 +94,7 @@ def main():
         pickle.dump(args, (args.class_data_dir.parent / 'args.pickle').open('wb'))
         shutil.copytree(results_dir, repo_dir, dirs_exist_ok=True)
         local_repo.push_to_hub(commit_message="Add cache files", blocking=False, clean_ok=True, auto_lfs_prune=True)
+        torch.cuda.empty_cache()
     print("Done!")
 
 if __name__ == "__main__":
