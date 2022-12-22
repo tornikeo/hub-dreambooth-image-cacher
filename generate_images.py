@@ -422,26 +422,11 @@ def get_full_repo_name(model_id: str, organization: Optional[str] = None, token:
 
 
 def main(args):
-    logging_dir = Path(args.output_dir, args.logging_dir)
 
     accelerator = Accelerator(
         gradient_accumulation_steps=args.gradient_accumulation_steps,
         mixed_precision=args.mixed_precision,
-        log_with="tensorboard",
-        logging_dir=logging_dir,
     )
-
-    # Currently, it's not possible to do gradient accumulation when training two models with accelerate.accumulate
-    # This will be enabled soon in accelerate. For now, we don't allow gradient accumulation when training two models.
-    # TODO (patil-suraj): Remove this check when gradient accumulation with two models is enabled in accelerate.
-    if args.train_text_encoder and args.gradient_accumulation_steps > 1 and accelerator.num_processes > 1:
-        raise ValueError(
-            "Gradient accumulation is not supported when training the text encoder in distributed training. "
-            "Please set gradient_accumulation_steps to 1. This feature will be supported in the future."
-        )
-
-    if args.seed is not None:
-        set_seed(args.seed)
 
     if args.with_prior_preservation:
         class_images_dir = Path(args.class_data_dir)
@@ -466,7 +451,7 @@ def main(args):
                     if attempts == 2: raise e
             
                 
-            pipeline.set_progress_bar_config(disable=True)
+            # pipeline.set_progress_bar_config(disable=True)
 
             num_new_images = args.num_class_images - cur_class_images
             logger.info(f"Number of class images to sample: {num_new_images}.")
@@ -492,41 +477,41 @@ def main(args):
                 torch.cuda.empty_cache()
 
     # Handle the repository creation
-    if accelerator.is_main_process:
-        import huggingface_hub
-        if args.push_to_hub:
-            assert args.hub_token is not None
-            huggingface_hub.login(args.hub_token)
-            if args.hub_model_id is None:
-                repo_name = get_full_repo_name(Path(args.output_dir).name, token=args.hub_token)
-            else:
-                repo_name = args.hub_model_id
-            repo = Repository(args.output_dir, clone_from=repo_name)
+    # if accelerator.is_main_process:
+    #     import huggingface_hub
+    #     if args.push_to_hub:
+    #         assert args.hub_token is not None
+    #         huggingface_hub.login(args.hub_token)
+    #         if args.hub_model_id is None:
+    #             repo_name = get_full_repo_name(Path(args.output_dir).name, token=args.hub_token)
+    #         else:
+    #             repo_name = args.hub_model_id
+    #         repo = Repository(args.output_dir, clone_from=repo_name)
             
 
-            with open(os.path.join(args.output_dir, ".gitignore"), "w+") as gitignore:
-                if "step_*" not in gitignore:
-                    gitignore.write("step_*\n")
-                if "epoch_*" not in gitignore:
-                    gitignore.write("epoch_*\n")
-        elif args.output_dir is not None:
-            os.makedirs(args.output_dir, exist_ok=True)
+    #         with open(os.path.join(args.output_dir, ".gitignore"), "w+") as gitignore:
+    #             if "step_*" not in gitignore:
+    #                 gitignore.write("step_*\n")
+    #             if "epoch_*" not in gitignore:
+    #                 gitignore.write("epoch_*\n")
+    #     elif args.output_dir is not None:
+    #         os.makedirs(args.output_dir, exist_ok=True)
     
 
-    if accelerator.is_main_process:
-        logger.info("Saving the model...")
-        if not args.do_not_save_pretrained:
-            pipeline = DiffusionPipeline.from_pretrained(
-                args.pretrained_model_name_or_path,
-                unet=accelerator.unwrap_model(unet),
-                text_encoder=accelerator.unwrap_model(text_encoder),
-                revision='fp16',
-                torch_dtype=torch.float16,
-            )
-            pipeline.save_pretrained(args.output_dir)
+    # if accelerator.is_main_process:
+    #     logger.info("Saving the model...")
+    #     if not args.do_not_save_pretrained:
+    #         pipeline = DiffusionPipeline.from_pretrained(
+    #             args.pretrained_model_name_or_path,
+    #             unet=accelerator.unwrap_model(unet),
+    #             text_encoder=accelerator.unwrap_model(text_encoder),
+    #             revision='fp16',
+    #             torch_dtype=torch.float16,
+    #         )
+    #         pipeline.save_pretrained(args.output_dir)
 
-        if args.push_to_hub:
-            logger.info(f"Pushing the model to the hub (repo-name {repo_name}) ...")
-            repo.push_to_hub(commit_message="End of training", blocking=True, clean_ok=False, auto_lfs_prune=True)
+    #     if args.push_to_hub:
+    #         logger.info(f"Pushing the model to the hub (repo-name {repo_name}) ...")
+    #         repo.push_to_hub(commit_message="End of training", blocking=True, clean_ok=False, auto_lfs_prune=True)
 
     accelerator.end_training()
